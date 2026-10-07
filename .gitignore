@@ -1,0 +1,34 @@
+# ---- dependencies ----
+node_modules/
+
+# ---- environment ----
+.env
+.env.local
+.env.*.local
+
+# ---- extracted outputs (generated, not source) ----
+scorm-extract/out/
+scorm-index/out/
+scorm-eval/out/
+
+# ---- uploaded & unzipped SCORM packages ----
+scorm-chat-api/uploads/
+
+# ---- logs ----
+*.log
+logs/
+npm-debug.log*
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- editors ----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---- reference project (has its own nested .git) ----
+migoto_ai_user_phasetwo_fe/

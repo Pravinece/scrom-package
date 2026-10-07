@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interface Verification Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Source+Sans+3:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+    <style>
+      :root {
+        --bg: #f4efe4;
+        --surface: #fdfbf5;
+        --surface-2: #ece5d4;
+        --ink: #1c1a16;
+        --ink-dim: #6b6255;
+        --ink-faint: #9a917f;
+        --line: #ddd2ba;
+        --accent: #e2650f;
+        --accent-ink: #ffffff;
+        --accent-deep: #a94608;
+        --steel: #23454f;
+        --steel-ink: #eef4f4;
+        --warn: #8a6a12;
+        --warn-bg: #f3e6c2;
+        --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+        --sans: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+        --disp: "Archivo", var(--sans);
+        --radius: 10px;
+        --shadow: 0 1px 2px rgba(28, 22, 10, 0.06), 0 6px 20px -10px rgba(28, 22, 10, 0.18);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #15130f;
+          --surface: #1d1a15;
+          --surface-2: #26221b;
+          --ink: #f2ece0;
+          --ink-dim: #b6ac99;
+          --ink-faint: #7c7362;
+          --line: #383026;
+          --accent: #ff8a3d;
+          --accent-ink: #1a1006;
+          --accent-deep: #ffb27a;
+          --steel: #6fa2ac;
+          --steel-ink: #0d1a1d;
+          --warn: #e0c169;
+          --warn-bg: #332a11;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 26px -12px rgba(0, 0, 0, 0.6);
+        }
+      }
+      /* Explicit toggle wins over system preference in both directions */
+      :root[data-theme="dark"] {
+        --bg: #15130f;
+        --surface: #1d1a15;
+        --surface-2: #26221b;
+        --ink: #f2ece0;
+        --ink-dim: #b6ac99;
+        --ink-faint: #7c7362;
+        --line: #383026;
+        --accent: #ff8a3d;
+        --accent-ink: #1a1006;
+        --accent-deep: #ffb27a;
+        --steel: #6fa2ac;
+        --steel-ink: #0d1a1d;
+        --warn: #e0c169;
+        --warn-bg: #332a11;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 26px -12px rgba(0, 0, 0, 0.6);
+      }
+      .theme-toggle {
+        font-size: 13px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--steel-ink);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 999px;
+        padding: 6px 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--disp);
+        margin: 0;
+      }
+      .app {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 18px 20px 28px;
+      }
+      .topbar {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 20px;
+        background: var(--steel);
+        color: var(--steel-ink);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        flex-wrap: wrap;
+      }
+      .brand-mark {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--accent);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .topbar h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--steel-ink);
+      }
+      .course-name {
+        margin: 3px 0 0;
+        font-size: 13.5px;
+        color: var(--steel-ink);
+        opacity: 0.78;
+      }
+      .status-pill {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--steel-ink);
+        white-space: nowrap;
+      }
+      .status-pill.bad {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+      .caveat-btn {
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        background: var(--warn-bg);
+        color: var(--warn);
+        border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+        border-radius: 999px;
+        padding: 7px 14px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .caveat-panel {
+        margin-top: 10px;
+        background: var(--warn-bg);
+        border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        font-size: 13.5px;
+      }
+      .caveat-panel[hidden] {
+        display: none;
+      }
+      .caveat-panel h3 {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--warn);
+        margin-bottom: 8px;
+      }
+      .caveat-panel ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      .caveat-panel li + li {
+        margin-top: 7px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 16px;
+        margin-top: 16px;
+        align-items: start;
+      }
+      @media (max-width: 880px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .avatar-pane {
+          max-width: 320px;
+          margin: 0 auto;
+        }
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .chat-pane {
+        height: min(72vh, 680px);
+      }
+      /* The avatar is the primary interface, not a decoration beside a
+         chat log - large portrait video, state pill, and the current
+         reply shown as a caption over it, the way a video call would. */
+      .avatar-pane {
+        position: sticky;
+        top: 16px;
+      }
+      .avatar-stage {
+        position: relative;
+        background: var(--steel);
+        border-radius: var(--radius) var(--radius) 0 0;
+        overflow: hidden;
+        /* Matches the source clips' own 540x960 ratio exactly - width-driven
+           height via aspect-ratio, not a cropped fixed box. */
+        aspect-ratio: 9 / 16;
+        width: 100%;
+      }
+      .avatar-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
+        display: block;
+      }
+      .avatar-state-pill {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        backdrop-filter: blur(2px);
+      }
+      .avatar-state-pill.speaking {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .avatar-state-pill.listening {
+        background: var(--steel-ink);
+        color: var(--steel);
+      }
+      .avatar-name-tag {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        font-family: var(--disp);
+        font-weight: 600;
+        font-size: 13px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 4px 10px;
+        border-radius: 999px;
+        backdrop-filter: blur(2px);
+      }
+      .chat-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px 18px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .msg {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-width: 88%;
+      }
+      .msg.user {
+        align-self: flex-end;
+        align-items: flex-end;
+      }
+      .msg.assistant {
+        align-self: flex-start;
+        align-items: flex-start;
+      }
+      .msg.system {
+        align-self: center;
+        max-width: 100%;
+      }
+      .bubble {
+        border-radius: 12px;
+        padding: 10px 13px;
+        font-size: 14.5px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .msg.user .bubble {
+        background: var(--steel);
+        color: var(--steel-ink);
+        border-bottom-right-radius: 3px;
+      }
+      .msg.assistant .bubble {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--accent);
+        border-bottom-left-radius: 3px;
+      }
+      .msg.system .bubble {
+        background: transparent;
+        border: 1px dashed var(--line);
+        color: var(--ink-dim);
+        font-size: 13px;
+        text-align: center;
+      }
+      .role-tag {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        padding: 0 3px;
+      }
+      .bubble .cite {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: color-mix(in srgb, var(--accent) 16%, transparent);
+        color: var(--accent-deep);
+        border-radius: 4px;
+        padding: 0 4px;
+      }
+      .bubble ul {
+        margin: 6px 0;
+        padding-left: 18px;
+      }
+      .note {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--ink-faint);
+        font-style: italic;
+      }
+      .note.error {
+        color: var(--warn);
+        font-style: normal;
+      }
+      .suggested {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        padding: 10px 18px;
+        border-top: 1px solid var(--line);
+      }
+      .chip {
+        font-size: 12.5px;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        color: var(--ink-dim);
+        border-radius: 999px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      .chip:hover {
+        border-color: var(--accent);
+        color: var(--ink);
+      }
+      .composer {
+        display: flex;
+        gap: 8px;
+        padding: 12px 14px;
+        border-top: 1px solid var(--line);
+        align-items: flex-end;
+      }
+      .composer textarea {
+        flex: 1;
+        resize: none;
+        font-family: var(--sans);
+        font-size: 14.5px;
+        color: var(--ink);
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 9px 12px;
+        max-height: 110px;
+      }
+      .btn {
+        font-weight: 600;
+        font-size: 14px;
+        border-radius: 9px;
+        border: none;
+        padding: 10px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .composer-notice {
+        padding: 0 18px 12px;
+        font-size: 12.5px;
+        color: var(--warn);
+      }
+      .composer-notice[hidden] {
+        display: none;
+      }
+      footer.hint {
+        margin-top: 14px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--ink-faint);
+      }
+
+      .package-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        flex-wrap: wrap;
+      }
+      .package-bar label {
+        font-size: 12px;
+        color: var(--ink-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .package-select {
+        flex: 1;
+        min-width: 200px;
+        font-size: 13.5px;
+        padding: 7px 9px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--ink);
+      }
+      .package-status {
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        color: var(--ink-faint);
+      }
+      .package-status.ready {
+        color: var(--steel);
+      }
+      .package-status.processing {
+        color: var(--warn);
+      }
+      .package-status.failed {
+        color: var(--warn);
+        font-weight: 600;
+      }
+      .upload-btn {
+        font-size: 13px;
+        font-weight: 600;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        color: var(--ink-dim);
+        border-radius: 8px;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+      .upload-btn:hover {
+        border-color: var(--accent);
+        color: var(--ink);
+      }
+      .package-progress {
+        font-size: 12px;
+        color: var(--ink-faint);
+      }
+      .mic-btn {
+        font-size: 18px;
+        line-height: 1;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        color: var(--ink-dim);
+        border-radius: 9px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .mic-btn:hover {
+        border-color: var(--accent);
+      }
+      .mic-btn.listening {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+        }
+        50% {
+          box-shadow: 0 0 0 8px transparent;
+        }
+      }
+      .voice-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px 14px 14px;
+        font-size: 12.5px;
+        color: var(--ink-faint);
+      }
+      .voice-controls select {
+        width: 100%;
+        font-size: 12.5px;
+        padding: 6px 7px;
+        border-radius: 7px;
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--ink);
+      }
+      .voice-controls label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+      }
+      .speaking-indicator {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--accent-deep);
+      }
+      .speaking-indicator[hidden] {
+        display: none;
+      }
+      .skip-btn {
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        color: var(--ink-dim);
+        border-radius: 999px;
+        padding: 5px 12px;
+        cursor: pointer;
+        align-self: flex-start;
+      }
+      .skip-btn:hover {
+        border-color: var(--accent);
+        color: var(--ink);
+      }
+      .skip-btn[hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div>
+          <span class="brand-mark">Migoto SCORM</span>
+          <h1>Migoto SCORM Based Interface</h1>
+          <p class="course-name">
+            Interface Management in Multi-Product Pipeline — course + reference SOP/IQCM, Azure-indexed
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <span class="status-pill" id="statusPill">connecting…</span>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch theme">
+            <span id="themeToggleIcon">🌙</span> <span id="themeToggleLabel">Dark</span>
+          </button>
+          <button class="caveat-btn" id="caveatToggle" type="button" aria-expanded="false">⚠ Extraction notes</button>
+        </div>
+      </header>
+
+      <div class="package-bar">
+        <label for="packageSelect">Package</label>
+        <select class="package-select" id="packageSelect"></select>
+        <span class="package-status" id="packageStatus"></span>
+        <span class="package-progress" id="packageProgress"></span>
+        <button type="button" class="upload-btn" id="uploadBtn">Upload SCORM .zip</button>
+        <input type="file" id="uploadInput" accept=".zip" hidden />
+      </div>
+
+      <div class="caveat-panel" id="caveatPanel" hidden>
+        <h3>What this chat can and can't see</h3>
+        <ul>
+          <li>
+            <strong>Answer key is a heuristic.</strong> Correct MCQ answers are resolved by matching the course's
+            internal choice order against the on-screen option order — validated by spot-check against the real IQCM
+            clause 3.3.5 table, but not a guarantee for every question.
+          </li>
+          <li>
+            <strong>One reference document isn't indexed.</strong> "Chapter 04 of NRPL Operational Manual" is a scanned
+            PDF (near-zero extractable text) — it needs OCR, not included in this chat's knowledge yet.
+          </li>
+          <li>
+            <strong>Narration transcripts are machine-generated</strong> (Whisper), not verbatim scripts — treat them as
+            "the video appears to say," not fact with the same confidence as on-screen text.
+          </li>
+          <li>
+            <strong>Diagrams and on-screen text inside videos aren't captured at all.</strong> Transcription covers only
+            spoken audio — confirmed on a real clip in this course where a pipe-order diagram (HSD → PCK → MS) was never
+            narrated aloud, so it's invisible to this chat. If a video plausibly shows something visually that isn't in
+            the transcript, that's why.
+          </li>
+          <li>
+            <strong>Terminology:</strong> the course says "MS", the IQCM manual says "MG" (Motor Gasoline) — same
+            product. The assistant is instructed to treat these as equivalent.
+          </li>
+        </ul>
+      </div>
+
+      <main class="layout">
+        <aside class="panel avatar-pane">
+          <div class="avatar-stage">
+            <video id="avatarVideo" class="avatar-video" muted autoplay playsinline></video>
+            <span class="avatar-name-tag" id="avatarName">Chandra</span>
+            <span class="avatar-state-pill" id="avatarStatePill">idle</span>
+          </div>
+          <div class="voice-controls">
+            <label><input type="checkbox" id="autoSpeak" checked /> Speak replies aloud</label>
+            <select id="voiceSelect">
+              <option value="en-US-AvaMultilingualNeural">Chandra (female)</option>
+              <option value="en-US-EmmaMultilingualNeural">Chandra (female, bright)</option>
+              <option value="en-US-AndrewMultilingualNeural">Vikas (male)</option>
+              <option value="en-GB-OllieMultilingualNeural">Vikas (male, UK)</option>
+            </select>
+            <span class="speaking-indicator" id="speakingIndicator" hidden>🔊 speaking…</span>
+            <button type="button" class="skip-btn" id="skipBtn" hidden>⏭ Skip</button>
+          </div>
+        </aside>
+
+        <section class="panel chat-pane">
+          <div class="chat-scroll" id="chatScroll"></div>
+          <div class="suggested" id="suggested"></div>
+          <p class="composer-notice" id="composerNotice" hidden></p>
+          <form class="composer" id="composer">
+            <button type="button" class="mic-btn" id="micBtn" title="Talk instead of typing">🎙️</button>
+            <textarea
+              id="input"
+              rows="1"
+              placeholder="Ask me anything about this course, or tap the mic to talk…"
+            ></textarea>
+            <button type="submit" class="btn btn-primary" id="sendBtn">Ask</button>
+          </form>
+        </section>
+      </main>
+
+      <footer class="hint">
+        Talk to this course like a tutor — grounded in the real course content, spoken back to you by Azure AI Speech.
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@1.52.0/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
+    <script>
+      const API_BASE = window.SCORM_CHAT_API_BASE || "http://localhost:8787";
+
+      // ---- theme toggle ----
+      const themeToggle = document.getElementById("themeToggle");
+      const themeToggleIcon = document.getElementById("themeToggleIcon");
+      const themeToggleLabel = document.getElementById("themeToggleLabel");
+
+      function systemPrefersDark() {
+        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      }
+      function readStoredTheme() {
+        try {
+          return localStorage.getItem("scorm-console-theme");
+        } catch (e) {
+          return null;
+        }
+      }
+      function storeTheme(theme) {
+        try {
+          localStorage.setItem("scorm-console-theme", theme);
+        } catch (e) {
+          /* private mode / storage disabled - toggle still works for this load */
+        }
+      }
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        // Button shows the theme a click will switch TO, not the current one.
+        themeToggleIcon.textContent = theme === "dark" ? "☀️" : "🌙";
+        themeToggleLabel.textContent = theme === "dark" ? "Light" : "Dark";
+      }
+
+      let currentTheme = readStoredTheme() || (systemPrefersDark() ? "dark" : "light");
+      applyTheme(currentTheme);
+      themeToggle.addEventListener("click", () => {
+        currentTheme = currentTheme === "dark" ? "light" : "dark";
+        storeTheme(currentTheme);
+        applyTheme(currentTheme);
+      });
+
+      const caveatToggle = document.getElementById("caveatToggle");
+      const caveatPanel = document.getElementById("caveatPanel");
+      caveatToggle.addEventListener("click", () => {
+        const open = caveatPanel.hasAttribute("hidden");
+        if (open) caveatPanel.removeAttribute("hidden");
+        else caveatPanel.setAttribute("hidden", "");
+        caveatToggle.setAttribute("aria-expanded", String(open));
+      });
+
+      const statusPill = document.getElementById("statusPill");
+      const chatScroll = document.getElementById("chatScroll");
+      const suggestedEl = document.getElementById("suggested");
+      const composer = document.getElementById("composer");
+      const input = document.getElementById("input");
+      const sendBtn = document.getElementById("sendBtn");
+      const composerNotice = document.getElementById("composerNotice");
+
+      let apiReady = false;
+      let sending = false;
+      let history = [];
+      let currentPackageId = null;
+      let pollTimer = null;
+
+      const packageSelect = document.getElementById("packageSelect");
+      const packageStatus = document.getElementById("packageStatus");
+      const packageProgress = document.getElementById("packageProgress");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const uploadInput = document.getElementById("uploadInput");
+
+      const micBtn = document.getElementById("micBtn");
+      const autoSpeak = document.getElementById("autoSpeak");
+      const voiceSelect = document.getElementById("voiceSelect");
+      const speakingIndicator = document.getElementById("speakingIndicator");
+      const skipBtn = document.getElementById("skipBtn");
+
+      // ---- video avatar ----
+      // Two clips per avatar (idle, talk) - matches the real production
+      // data model (not the single-file-with-timestamps prototype): switch
+      // which clip is playing based on conversation state. "listening"
+      // reuses the idle clip, same as the reference implementation, which
+      // has no separate listening footage either.
+      const avatarVideo = document.getElementById("avatarVideo");
+      const avatarName = document.getElementById("avatarName");
+      const avatarStatePill = document.getElementById("avatarStatePill");
+      const AVATAR_BY_VOICE = {
+        "en-US-AvaMultilingualNeural": {
+          name: "Chandra",
+          idle: "assets/avatar/learn-mode/chandra-idle.mp4",
+          talk: "assets/avatar/learn-mode/chandra-talk.mp4",
+        },
+        "en-US-EmmaMultilingualNeural": {
+          name: "Chandra",
+          idle: "assets/avatar/learn-mode/chandra-idle.mp4",
+          talk: "assets/avatar/learn-mode/chandra-talk.mp4",
+        },
+        "en-US-AndrewMultilingualNeural": {
+          name: "Vikas",
+          idle: "assets/avatar/learn-mode/vikas-idle.mp4",
+          talk: "assets/avatar/learn-mode/vikas-talk.mp4",
+        },
+        "en-GB-OllieMultilingualNeural": {
+          name: "Vikas",
+          idle: "assets/avatar/learn-mode/vikas-idle.mp4",
+          talk: "assets/avatar/learn-mode/vikas-talk.mp4",
+        },
+      };
+      let avatarMode = "idle"; // "idle" | "talk" - which clip is currently loaded
+
+      function currentAvatar() {
+        return AVATAR_BY_VOICE[voiceSelect.value] || AVATAR_BY_VOICE["en-US-AvaMultilingualNeural"];
+      }
+
+      function playAvatarClip(mode) {
+        const info = currentAvatar();
+        const src = info[mode];
+        if (avatarMode !== mode || !avatarVideo.src.endsWith(src)) {
+          avatarVideo.src = src;
+          avatarMode = mode;
+        }
+        avatarVideo.loop = true; // idle runs continuously; talk loops if the reply outlasts the clip
+        avatarVideo.play().catch(() => {});
+      }
+
+      function applyAvatarForVoice() {
+        avatarName.textContent = currentAvatar().name;
+        playAvatarClip(avatarStatePill.textContent === "speaking" ? "talk" : "idle");
+      }
+      voiceSelect.addEventListener("change", applyAvatarForVoice);
+      applyAvatarForVoice();
+
+      function setAvatarState(state) {
+        avatarStatePill.textContent = state; // "idle" | "speaking" | "listening"
+        avatarStatePill.className = "avatar-state-pill" + (state !== "idle" ? " " + state : "");
+        playAvatarClip(state === "speaking" ? "talk" : "idle");
+      }
+
+      function escapeHtml(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function formatAnswer(raw) {
+        let esc = escapeHtml(raw);
+        esc = esc.replace(/\[([^\]\n]{2,90})\]/g, '<span class="cite">[$1]</span>');
+        esc = esc.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+        const lines = esc.split("\n");
+        let html = "",
+          inList = false;
+        for (const line of lines) {
+          const m = /^\s*[-•]\s+(.*)$/.exec(line);
+          if (m) {
+            if (!inList) {
+              html += "<ul>";
+              inList = true;
+            }
+            html += "<li>" + m[1] + "</li>";
+          } else {
+            if (inList) {
+              html += "</ul>";
+              inList = false;
+            }
+            html += line.trim() === "" ? "<br>" : line + "<br>";
+          }
+        }
+        if (inList) html += "</ul>";
+        return html;
+      }
+
+      function addMessage(role, text) {
+        const wrap = document.createElement("div");
+        wrap.className = "msg " + role;
+        if (role !== "system") {
+          const tag = document.createElement("span");
+          tag.className = "role-tag";
+          tag.textContent = role === "user" ? "You" : "Console";
+          wrap.appendChild(tag);
+        }
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = role === "system" ? escapeHtml(text) : formatAnswer(text);
+        wrap.appendChild(bubble);
+        chatScroll.appendChild(wrap);
+        chatScroll.scrollTop = chatScroll.scrollHeight;
+        return bubble;
+      }
+
+      function appendNote(bubble, text, isError) {
+        const note = document.createElement("span");
+        note.className = "note" + (isError ? " error" : "");
+        note.textContent = text;
+        bubble.appendChild(note);
+      }
+
+      // ---- voice (Azure Speech, streaming STT + TTS) ----
+      // Runs directly in the browser against Azure over the Speech SDK's own
+      // streaming connection - not proxied through this app's backend - so
+      // there's only one network hop between the mic/speaker and Azure,
+      // which is what keeps latency down.
+      let speechToken = null; // {token, region, voice, fetchedAt}
+      let synthesizer = null;
+      let audioPlayer = null; // SpeakerAudioDestination - the actual playback handle
+      let recognizer = null;
+      let voiceAvailable = null; // null = unknown yet, else true/false
+
+      async function fetchSpeechToken() {
+        const res = await fetch(API_BASE + "/speech-token");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "speech not available");
+        speechToken = { ...data, fetchedAt: Date.now() };
+        return speechToken;
+      }
+
+      // Tokens last ~10 minutes; refetch if this one is getting old rather
+      // than waiting for a mid-call failure.
+      async function ensureSpeechToken() {
+        if (speechToken && Date.now() - speechToken.fetchedAt < 8 * 60 * 1000) return speechToken;
+        return fetchSpeechToken();
+      }
+
+      function makeSpeechConfig(tok) {
+        const cfg = SpeechSDK.SpeechConfig.fromAuthorizationToken(tok.token, tok.region);
+        cfg.speechSynthesisVoiceName = voiceSelect.value || tok.voice;
+        return cfg;
+      }
+
+      async function speakText(text) {
+        if (!text || !autoSpeak.checked) return;
+        try {
+          const tok = await ensureSpeechToken();
+          voiceAvailable = true;
+          if (synthesizer) {
+            synthesizer.close();
+            synthesizer = null;
+          }
+          const cfg = makeSpeechConfig(tok);
+          // SpeakerAudioDestination (rather than
+          // AudioConfig.fromDefaultSpeakerOutput()'s implicit one) gives a
+          // handle with real onAudioStart/onAudioEnd events tied to actual
+          // playback, plus a .close() we can use as a skip/stop control.
+          // Confirmed server-side that speakTextAsync's own completion
+          // callback fires as soon as synthesis/download finishes (~700ms
+          // for a 6.2s reply) - well before the audio has actually finished
+          // playing - so that callback is the wrong thing to drive avatar
+          // state or a skip button from.
+          audioPlayer = new SpeechSDK.SpeakerAudioDestination();
+          audioPlayer.onAudioStart = () => {
+            speakingIndicator.hidden = false;
+            skipBtn.hidden = false;
+            setAvatarState("speaking");
+          };
+          audioPlayer.onAudioEnd = () => {
+            speakingIndicator.hidden = true;
+            skipBtn.hidden = true;
+            setAvatarState("idle");
+          };
+          const audioConfig = SpeechSDK.AudioConfig.fromSpeakerOutput(audioPlayer);
+          synthesizer = new SpeechSDK.SpeechSynthesizer(cfg, audioConfig);
+          await new Promise((resolve) => {
+            synthesizer.speakTextAsync(
+              text,
+              () => {
+                // Read the SDK's actual source: the audio destination's real
+                // duration is only finalized (letting the browser's <audio>
+                // element know when it's genuinely done, so it fires its
+                // native "ended" event -> our onAudioEnd) once the
+                // destination's close() runs - and that only happens from
+                // the synthesizer's own dispose(), never automatically after
+                // an utterance. Without this, the FIRST reply's avatar never
+                // gets an onAudioEnd at all (it only fired, belatedly, when
+                // the *next* call's cleanup closed the *previous*
+                // synthesizer) - exactly "doesn't stop talking" after the
+                // audio is actually done.
+                if (synthesizer) {
+                  synthesizer.close();
+                  synthesizer = null;
+                }
+                resolve();
+              },
+              (err) => {
+                console.error("[speech] synthesis error:", err);
+                if (synthesizer) {
+                  synthesizer.close();
+                  synthesizer = null;
+                }
+                resolve();
+              },
+            );
+          });
+        } catch (err) {
+          voiceAvailable = false;
+          speakingIndicator.hidden = true;
+          skipBtn.hidden = true;
+          setAvatarState("idle");
+          console.error("[speech] TTS unavailable:", err.message);
+        }
+      }
+
+      function skipSpeech() {
+        // Read the SDK's actual source: close() only finalizes the media
+        // stream (stops accepting new audio data) - it never calls .pause()
+        // on the underlying <audio> element, so already-buffered audio
+        // just keeps playing right through a close() call. .pause() is
+        // the one that actually stops it. Since a manual pause doesn't
+        // fire the real "ended" event, onAudioEnd won't run - reset the
+        // UI state here directly instead of relying on it.
+        if (audioPlayer) {
+          audioPlayer.pause();
+          audioPlayer = null;
+        }
+        if (synthesizer) {
+          synthesizer.close();
+          synthesizer = null;
+        }
+        speakingIndicator.hidden = true;
+        skipBtn.hidden = true;
+        setAvatarState("idle");
+      }
+      skipBtn.addEventListener("click", skipSpeech);
+
+      // recognizeOnceAsync is the SDK's built-in single-utterance mode: it
+      // streams mic audio to Azure as the learner speaks, uses Azure's own
+      // silence detection to know when they've stopped, and resolves with
+      // one final result - exactly the "ask a question, then submit" turn
+      // this UI needs, without hand-rolling that lifecycle.
+      async function toggleListening() {
+        if (recognizer) {
+          stopListeningUi();
+          return;
+        }
+        try {
+          const tok = await ensureSpeechToken();
+          voiceAvailable = true;
+          const cfg = makeSpeechConfig(tok);
+          recognizer = new SpeechSDK.SpeechRecognizer(cfg, SpeechSDK.AudioConfig.fromDefaultMicrophoneInput());
+          micBtn.classList.add("listening");
+          input.placeholder = "Listening…";
+          setAvatarState("listening");
+
+          recognizer.recognizing = (_s, e) => {
+            input.value = e.result.text;
+          };
+
+          recognizer.recognizeOnceAsync(
+            (result) => {
+              const text = result.reason === SpeechSDK.ResultReason.RecognizedSpeech ? result.text.trim() : "";
+              stopListeningUi();
+              input.value = "";
+              if (text) ask(text);
+            },
+            (err) => {
+              console.error("[speech] recognition error:", err);
+              stopListeningUi();
+            },
+          );
+        } catch (err) {
+          voiceAvailable = false;
+          composerNotice.hidden = false;
+          composerNotice.textContent = "Voice isn't available: " + err.message;
+          stopListeningUi();
+        }
+      }
+
+      function stopListeningUi() {
+        micBtn.classList.remove("listening");
+        input.placeholder = "Ask me anything about this course, or tap the mic to talk…";
+        setAvatarState("idle");
+        if (recognizer) {
+          const r = recognizer;
+          recognizer = null;
+          r.close();
+        }
+      }
+
+      micBtn.addEventListener("click", () => {
+        if (typeof SpeechSDK === "undefined") {
+          composerNotice.hidden = false;
+          composerNotice.textContent = "Voice SDK didn't load - check your connection and reload.";
+          return;
+        }
+        toggleListening();
+      });
+
+      async function ask(question) {
+        addMessage("user", question);
+        history.push({ role: "user", content: question });
+        sending = true;
+        input.disabled = true;
+        sendBtn.disabled = true;
+
+        const bubble = addMessage("assistant", "Thinking…");
+        try {
+          const res = await fetch(API_BASE + "/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question, history: history.slice(-10), packageId: currentPackageId }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+          bubble.innerHTML = formatAnswer(data.answer || "");
+          history.push({ role: "assistant", content: data.answer || "" });
+          speakText(data.answer || "");
+        } catch (err) {
+          bubble.innerHTML = "";
+          appendNote(bubble, "Couldn't get an answer: " + err.message, true);
+        } finally {
+          sending = false;
+          input.disabled = false;
+          sendBtn.disabled = false;
+          chatScroll.scrollTop = chatScroll.scrollHeight;
+        }
+      }
+
+      composer.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (sending) return;
+        const text = input.value.trim();
+        if (!text) return;
+        if (!apiReady) {
+          composerNotice.hidden = false;
+          composerNotice.textContent = "Backend isn't reachable at " + API_BASE + " — start it with `npm run api`.";
+          return;
+        }
+        if (!currentPackageId) {
+          composerNotice.hidden = false;
+          composerNotice.textContent = "Pick a ready package above (or upload a new SCORM .zip) before asking.";
+          return;
+        }
+        input.value = "";
+        ask(text);
+      });
+
+      /** Build suggestion chips from whatever package is actually loaded, instead
+       * of a fixed list written for one specific course (that broke the moment a
+       * different package was uploaded - "MS/PCK interface" means nothing in a
+       * compliance-training course). Every suggestion here is derived from real
+       * data in `course` / `pkg`, not hardcoded course content. */
+      // Learner-style conversation starters, not SME verification prompts -
+      // still built from real content in the package, just phrased the way
+      // someone would actually talk to a tutor.
+      // Structural labels ("Section 2", "Assessment Q1") aren't topics - a
+      // learner has no idea what those mean. Both the scene-label fallback
+      // (see extract.js's ordinal "Section N") and generic slide titles
+      // ("Q1", "Assessment Q1", "Untitled Slide") get treated as non-topical
+      // here, and a real topic phrase is pulled from the slide's own text
+      // instead.
+      function isGenericLabel(label) {
+        return !label || /^section\s*\d+$/i.test(label.trim());
+      }
+
+      // Universal Storyline MCQ chrome ("Select the correct option and click
+      // SUBMIT") - seen verbatim across every course tested - would
+      // otherwise win the "first sufficiently long line" heuristic before
+      // the real question ever gets a look in.
+      const NON_TOPIC_LINE = [
+        /^select the correct/i,
+        /^the options are/i,
+        /^click\b/i,
+        /^submit$/i,
+        /^continue$/i,
+        /^try again$/i,
+      ];
+
+      function deriveTopicLabel(slide) {
+        const title = (slide.title || "").trim();
+        const genericTitle =
+          !title ||
+          /^(assessment\s*)?q\.?\s*\d+$/i.test(title) ||
+          /^untitled/i.test(title) ||
+          /^slide\s*\d*$/i.test(title);
+        if (!genericTitle) return title;
+
+        const parts = (slide.text || "")
+          .split(" | ")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .filter((p) => !NON_TOPIC_LINE.some((re) => re.test(p)));
+        // A real question is the best possible "quiz me on" topic; fall back
+        // to any other sufficiently substantial, non-chrome line.
+        const candidate =
+          parts.find((p) => p.endsWith("?") && p.length > 10 && p.length < 160) ||
+          parts.find((p) => p.length > 20 && p.length < 140) ||
+          parts.find((p) => p.length > 10);
+        if (!candidate) return title || "this part of the course";
+        return candidate.length > 90 ? candidate.slice(0, 87) + "…" : candidate;
+      }
+
+      function buildSuggestions(course, pkg) {
+        const suggestions = [];
+        const courseTitle = course.meta?.title || "this course";
+        suggestions.push(`Can you give me a quick overview of ${courseTitle}?`);
+
+        // Single-scene courses fall back to the course title as the scene
+        // label (extract.js) - that's a real label, but repeating it here
+        // would just restate the overview suggestion above.
+        const namedScene = course.scenes.find(
+          (s) => !isGenericLabel(s.inferredLabel) && s.inferredLabel !== courseTitle,
+        );
+        if (namedScene) {
+          suggestions.push(`Can you walk me through "${namedScene.inferredLabel}"?`);
+        }
+
+        let quizTopic = null;
+        outer: for (const scene of course.scenes) {
+          for (const slide of scene.slides) {
+            if (slide.interactions.some((i) => i.correctOptionText)) {
+              quizTopic = deriveTopicLabel(slide);
+              break outer;
+            }
+          }
+        }
+        if (quizTopic) suggestions.push(`Quiz me on this: ${quizTopic}`);
+
+        suggestions.push("What's the one thing I really need to remember from this course?");
+        return suggestions.slice(0, 4);
+      }
+
+      function renderSuggestions(course, pkg) {
+        suggestedEl.innerHTML = "";
+        for (const q of buildSuggestions(course, pkg)) {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "chip";
+          chip.textContent = q;
+          chip.addEventListener("click", () => {
+            if (!sending && apiReady && currentPackageId) ask(q);
+          });
+          suggestedEl.appendChild(chip);
+        }
+      }
+
+      const STATUS_LABEL = {
+        queued: "queued",
+        unzipping: "unzipping",
+        extracting: "extracting",
+        chunking: "chunking",
+        indexing: "indexing",
+        transcribing: "transcribing",
+        ready: "ready",
+        failed: "failed",
+      };
+      const PROCESSING_STATUSES = new Set(["queued", "unzipping", "extracting", "chunking", "indexing", "transcribing"]);
+
+      function setPackageStatusPill(status) {
+        packageStatus.textContent = STATUS_LABEL[status] || status || "";
+        packageStatus.className =
+          "package-status" +
+          (status === "ready"
+            ? " ready"
+            : PROCESSING_STATUSES.has(status)
+              ? " processing"
+              : status === "failed"
+                ? " failed"
+                : "");
+      }
+
+      async function fetchPackages() {
+        const res = await fetch(API_BASE + "/packages");
+        const data = await res.json();
+        return data.packages || [];
+      }
+
+      function renderPackageOptions(packages) {
+        const prevSelection = packageSelect.value;
+        packageSelect.innerHTML = "";
+        for (const pkg of packages) {
+          const opt = document.createElement("option");
+          opt.value = pkg._id;
+          const label = pkg.title || pkg.sourceZipName || pkg._id;
+          opt.textContent = pkg.status === "ready" ? label : `${label} (${STATUS_LABEL[pkg.status] || pkg.status}…)`;
+          packageSelect.appendChild(opt);
+        }
+        if (packages.some((p) => p._id === prevSelection)) packageSelect.value = prevSelection;
+      }
+
+      async function refreshPackages({ preserveSelection = true } = {}) {
+        const packages = await fetchPackages();
+        renderPackageOptions(packages);
+        if (!packages.length) {
+          packageStatus.textContent = "";
+          packageProgress.textContent = "no packages yet — upload a SCORM .zip to begin";
+          return packages;
+        }
+        const wanted = preserveSelection && currentPackageId ? currentPackageId : packages[0]._id;
+        if (packageSelect.value !== wanted) packageSelect.value = wanted;
+        await onPackageSelected(packageSelect.value, packages);
+        return packages;
+      }
+
+      async function onPackageSelected(packageId, knownPackages) {
+        const packages = knownPackages || (await fetchPackages());
+        const pkg = packages.find((p) => p._id === packageId);
+        if (!pkg) return;
+        setPackageStatusPill(pkg.status);
+
+        if (PROCESSING_STATUSES.has(pkg.status)) {
+          currentPackageId = null;
+          packageProgress.textContent = "processing — chat will unlock once this package is ready";
+          schedulePoll();
+          return;
+        }
+        if (pkg.status === "failed") {
+          currentPackageId = null;
+          packageProgress.textContent = "processing failed: " + (pkg.error || "unknown error");
+          return;
+        }
+
+        packageProgress.textContent = pkg.stats
+          ? `${pkg.stats.slideCount} slides · ${pkg.stats.mcqResolved}/${pkg.stats.mcqTotal} answer keys resolved`
+          : "";
+        if (currentPackageId === packageId) return; // already loaded, avoid resetting an in-progress chat
+
+        currentPackageId = packageId;
+        history = [];
+        chatScroll.innerHTML = "";
+        addMessage(
+          "system",
+          `You're chatting with a tutor for "${pkg.title || packageId}". Type or tap the mic and ask anything — it'll answer , out loud if "Speak replies aloud" is on.`,
+        );
+        try {
+          const res = await fetch(`${API_BASE}/packages/${packageId}/course-content`);
+          const course = await res.json();
+          renderSuggestions(course, pkg);
+        } catch (e) {
+          console.error("[init] couldn't load course content for suggestions:", e.message);
+        }
+      }
+
+      function schedulePoll() {
+        if (pollTimer) return;
+        pollTimer = setInterval(async () => {
+          const packages = await fetchPackages().catch(() => []);
+          renderPackageOptions(packages);
+          const pkg = packages.find((p) => p._id === packageSelect.value);
+          if (pkg && !PROCESSING_STATUSES.has(pkg.status)) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+          }
+          if (pkg) await onPackageSelected(pkg._id, packages);
+        }, 4000);
+      }
+
+      packageSelect.addEventListener("change", () => onPackageSelected(packageSelect.value));
+
+      uploadBtn.addEventListener("click", () => uploadInput.click());
+      uploadInput.addEventListener("change", async () => {
+        const file = uploadInput.files[0];
+        uploadInput.value = "";
+        if (!file) return;
+        uploadBtn.disabled = true;
+        packageProgress.textContent = "uploading " + file.name + "…";
+        try {
+          const form = new FormData();
+          form.append("file", file);
+          const res = await fetch(API_BASE + "/packages", { method: "POST", body: form });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+          await refreshPackages({ preserveSelection: false });
+          packageSelect.value = data.packageId;
+          await onPackageSelected(data.packageId);
+        } catch (err) {
+          packageProgress.textContent = "upload failed: " + err.message;
+        } finally {
+          uploadBtn.disabled = false;
+        }
+      });
+
+      async function init() {
+        try {
+          const health = await fetch(API_BASE + "/health");
+          if (!health.ok) throw new Error("unhealthy");
+          apiReady = true;
+          statusPill.textContent = "backend connected";
+        } catch (e) {
+          statusPill.textContent = "backend unreachable";
+          statusPill.classList.add("bad");
+          composerNotice.hidden = false;
+          composerNotice.textContent = "Backend isn't reachable at " + API_BASE + " — start it with `npm run api`.";
+          return;
+        }
+        await refreshPackages();
+      }
+      init();
+    </script>
+  </body>
+</html>
