@@ -55,4 +55,9 @@ async function updateStatus(id, patch) {
   return col.updateOne({ _id: id }, { $set: { ...patch, updatedAt: new Date() } });
 }
 
-module.exports = { createPackage, findAll, findById, updateStatus };
+async function deleteById(id) {
+  const col = await getPackagesCollection();
+  return col.deleteOne({ _id: id });
+}
+
+module.exports = { createPackage, findAll, findById, updateStatus, deleteById };

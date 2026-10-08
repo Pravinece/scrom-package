@@ -35,7 +35,7 @@ async function createUserByAdmin({ name, empId, password, role = "user" }) {
 async function seedAdmin() {
   const empId = process.env.SEED_ADMIN_EMP_ID;
   const password = process.env.SEED_ADMIN_PASSWORD;
-  const name = process.env.SEED_ADMIN_NAME || "Super Admin";
+  const name = process.env.SEED_ADMIN_NAME || "admin";
   if (!empId || !password) {
     throw Object.assign(
       new Error("SEED_ADMIN_EMP_ID and SEED_ADMIN_PASSWORD must be set in .env"),

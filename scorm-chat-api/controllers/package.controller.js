@@ -1,8 +1,10 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { createPackage, getAllPackages, getPackageById } = require("../services/package.service.js");
-const { processPackage, transcribePackage } = require("../lib/process-package.js");
+const { createPackage, getAllPackages, getPackageById, deletePackage } = require("../services/package.service.js");
+const { processPackage, transcribePackage, UPLOADS_DIR } = require("../lib/process-package.js");
+const { loadAzureConfig, makeSearchClient } = require("../../lib-shared/azure-config.js");
+const { deletePackageChunks } = require("../../scorm-index/embed-and-index.js");
 
 const EXTRACT_ROOT = path.join(__dirname, "..", "..", "scorm-extract", "out");
 
@@ -65,4 +67,30 @@ function getCourseContent(req, res, next) {
   }
 }
 
-module.exports = { upload, listPackages, getPackage, transcribe, getCourseContent };
+async function removePackage(req, res, next) {
+  try {
+    const pkg = await getPackageById(req.params.id);
+
+    // 1. Delete Azure Search chunks
+    const config = loadAzureConfig();
+    const searchClient = makeSearchClient(config);
+    await deletePackageChunks(searchClient, pkg._id);
+
+    // 2. Delete uploaded/unzipped files
+    const uploadsDir = path.join(UPLOADS_DIR, pkg._id);
+    fs.rm(uploadsDir, { recursive: true, force: true }, () => {});
+
+    // 3. Delete extracted output
+    const extractDir = path.join(EXTRACT_ROOT, pkg._id);
+    fs.rm(extractDir, { recursive: true, force: true }, () => {});
+
+    // 4. Delete from MongoDB
+    await deletePackage(pkg._id);
+
+    res.json({ packageId: pkg._id, deleted: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { upload, listPackages, getPackage, transcribe, getCourseContent, removePackage };

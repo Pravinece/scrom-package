@@ -1,8 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./docs/swagger.js");
 const { initConfig, getConfig } = require("./config/index.js");
 const { UPLOADS_DIR } = require("./lib/process-package.js");
 const { errorHandler } = require("./middleware/error.middleware.js");
@@ -23,7 +21,7 @@ async function main() {
   app.use(express.json({ limit: "2mb" }));
   app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
     if (req.method === "OPTIONS") return res.sendStatus(204);
     next();
@@ -31,10 +29,6 @@ async function main() {
 
   // ---- health ----
   app.get("/health", (_req, res) => res.json({ ok: true }));
-
-  // ---- swagger docs ----
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  app.get("/api-docs.json", (_req, res) => res.json(swaggerSpec));
 
   // ---- routes ----
   app.use("/auth", authRoutes);

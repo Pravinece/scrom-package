@@ -1,4 +1,4 @@
-const { createPackage: create, findAll, findById } = require("../models/package.model.js");
+const { createPackage: create, findAll, findById, deleteById } = require("../models/package.model.js");
 
 async function createPackage({ packageId, sourceZipName }) {
   return create({ packageId, sourceZipName });
@@ -14,4 +14,8 @@ async function getPackageById(id) {
   return pkg;
 }
 
-module.exports = { createPackage, getAllPackages, getPackageById };
+async function deletePackage(id) {
+  return deleteById(id);
+}
+
+module.exports = { createPackage, getAllPackages, getPackageById, deletePackage };
