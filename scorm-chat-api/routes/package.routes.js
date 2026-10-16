@@ -15,7 +15,7 @@ router.post("/", authenticate, authorize("admin", "uploader"), multerUpload.sing
 
 router.get("/", authenticate, listPackages);
 
-router.get("/:id", authenticate, getPackage);
+router.get("/:id", getPackage);
 
 router.post("/:id/transcribe", authenticate, authorize("admin"), transcribe);
 
