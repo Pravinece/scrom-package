@@ -95,12 +95,17 @@ async function removePackage(req, res, next) {
 
 function getScormRoot(packageId) {
   // Real location after unzip
-  const dir = path.join(UPLOADS_DIR, packageId, "package");
-
-  if (fs.existsSync(path.join(dir, "imsmanifest.xml"))) {
-    return dir;
+  if (typeof packageId !== 'string') {
+    console.error('getScormRoot received non-string:', packageId);
+    return null;
   }
 
+  const dir = path.join(UPLOADS_DIR, packageId, 'package');
+
+  if (fs.existsSync(path.join(dir, 'imsmanifest.xml'))) {
+    return dir;
+  }
+  
   // Fallback (just in case some packages are different)
   const fallbacks = [
     path.join(UPLOADS_DIR, packageId),
@@ -166,35 +171,39 @@ async function getManifest(req, res, next) {
 async function serveScormContent(req, res, next) {
   try {
     const packageId = req.params.id;
-    const relativePath = req.params.path;   // ← changed from req.params[0]
-    
-    if (!relativePath || relativePath.includes("..")) {
-      return res.status(400).json({ error: "invalid path" });
+
+    // Handle both string and array (new Express)
+    let relativePath = req.params.path;
+    if (Array.isArray(relativePath)) {
+      relativePath = relativePath.join('/');
+    }
+
+    // Safety
+    if (!relativePath || typeof relativePath !== 'string' || relativePath.includes('..')) {
+      return res.status(400).json({ error: 'invalid path' });
     }
 
     const scormRoot = getScormRoot(packageId);
     if (!scormRoot) {
-      return res.status(404).json({ error: "SCORM package files not found" });
+      return res.status(404).json({ error: 'SCORM package files not found' });
     }
 
     const absolutePath = path.resolve(scormRoot, relativePath);
 
-    // Security: make sure the resolved path is still inside scormRoot
+    // Security check
     if (!absolutePath.startsWith(path.resolve(scormRoot))) {
-      return res.status(403).json({ error: "access denied" });
+      return res.status(403).json({ error: 'access denied' });
     }
 
     if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) {
-      return res.status(404).json({ error: "file not found" });
+      return res.status(404).json({ error: 'file not found' });
     }
 
-    // Let Express set the correct Content-Type
     res.sendFile(absolutePath);
   } catch (err) {
     next(err);
   }
 }
-
 module.exports = {
   upload,
   listPackages,
