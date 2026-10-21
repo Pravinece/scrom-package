@@ -60,10 +60,10 @@ router.get("/:id/course-content", authenticate, getCourseContent);
 // ────────────────────────────────────────────────
 // NEW routes for the SCORM player
 // ────────────────────────────────────────────────
-router.get("/:id/manifest",  getManifest);
+router.get("/:id/manifest", getManifest);
 
 // The * captures the rest of the path (story.html, story_content/..., etc.)
-router.get("/:id/content/*path", authenticate, serveScormContent);
+router.get("/:id/content/*path", serveScormContent);
 
 router.delete("/:id", authenticate, authorize("admin"), removePackage);
 
