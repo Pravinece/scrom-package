@@ -94,23 +94,26 @@ async function removePackage(req, res, next) {
 }
 
 function getScormRoot(packageId) {
-  // ← CHANGE HERE IF NEEDED
-  // Most common locations after unzip:
-  //   UPLOADS_DIR/{id}
-  //   UPLOADS_DIR/{id}/unzipped
-  //   UPLOADS_DIR/{id}/scorm
-  const candidates = [
+  // Real location after unzip
+  const dir = path.join(UPLOADS_DIR, packageId, "package");
+
+  if (fs.existsSync(path.join(dir, "imsmanifest.xml"))) {
+    return dir;
+  }
+
+  // Fallback (just in case some packages are different)
+  const fallbacks = [
     path.join(UPLOADS_DIR, packageId),
     path.join(UPLOADS_DIR, packageId, "unzipped"),
-    path.join(UPLOADS_DIR, packageId, "scorm"),
     path.join(UPLOADS_DIR, packageId, "extracted"),
   ];
 
-  for (const dir of candidates) {
-    if (fs.existsSync(path.join(dir, "imsmanifest.xml"))) {
-      return dir;
+  for (const fallback of fallbacks) {
+    if (fs.existsSync(path.join(fallback, "imsmanifest.xml"))) {
+      return fallback;
     }
   }
+
   return null;
 }
 
